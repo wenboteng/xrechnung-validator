@@ -1,0 +1,149 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "RechnungCheck API",
+    "version": "1.0.0",
+    "description": "Free single-file XRechnung / ZUGFeRD validation. 50 requests per IP per UTC day, 10 per minute. Batch and higher volume: https://checkxrechnung.com/api-waitlist",
+    "contact": {
+      "email": "info@bobook.club"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://checkxrechnung.com"
+    }
+  ],
+  "paths": {
+    "/v1/validate": {
+      "post": {
+        "summary": "Validate one XRechnung XML or ZUGFeRD PDF",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "XRechnung XML or ZUGFeRD PDF, max 5 MB"
+                  }
+                },
+                "required": ["file"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Validation report. Planned contract uses these website fields only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "persisted": {
+                      "type": "boolean",
+                      "const": false
+                    },
+                    "fileName": {
+                      "type": "string"
+                    },
+                    "bytes": {
+                      "type": "integer"
+                    },
+                    "hasXml": {
+                      "type": "boolean"
+                    },
+                    "syntax": {
+                      "type": "string",
+                      "example": "UBL Invoice"
+                    },
+                    "invoiceType": {
+                      "type": "string",
+                      "example": "XRechnung"
+                    },
+                    "summary": {
+                      "type": "object",
+                      "properties": {
+                        "errors": {
+                          "type": "integer"
+                        },
+                        "warnings": {
+                          "type": "integer"
+                        }
+                      }
+                    },
+                    "versions": {
+                      "type": "object",
+                      "properties": {
+                        "product": { "type": "string" },
+                        "domain": { "type": "string" },
+                        "xrechnung": { "type": "string" },
+                        "kosit_validator": { "type": "string" },
+                        "kosit_configuration": { "type": "string" },
+                        "en16931_schematron": { "type": "string" }
+                      }
+                    },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "severity": {
+                            "type": "string",
+                            "example": "error"
+                          },
+                          "code": {
+                            "type": "string",
+                            "example": "BR-08"
+                          },
+                          "location": {
+                            "type": "string",
+                            "example": "/Invoice"
+                          },
+                          "message": {
+                            "type": "string"
+                          },
+                          "hint": {
+                            "type": "string"
+                          },
+                          "source": {
+                            "type": "string",
+                            "example": "kosit"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "File larger than 5 MB"
+          },
+          "429": {
+            "description": "Free limit exceeded: 50 validations per IP per UTC day, or 10 per minute. Retry-After is set. Higher volume: https://checkxrechnung.com/api-waitlist",
+            "headers": {
+              "Retry-After": {
+                "schema": { "type": "integer" },
+                "description": "Seconds to wait"
+              },
+              "X-RateLimit-Limit": {
+                "schema": { "type": "integer" }
+              },
+              "X-RateLimit-Remaining": {
+                "schema": { "type": "integer" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

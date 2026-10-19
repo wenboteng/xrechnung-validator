@@ -1,0 +1,56 @@
+{
+  "name": "xrechnung-validator-mcp",
+  "version": "0.1.0",
+  "description": "MCP server: validate one XRechnung or ZUGFeRD file with the free checkxrechnung.com API.",
+  "mcpName": "io.github.wenboteng/xrechnung-validator",
+  "license": "MIT",
+  "author": "Bobook Limited",
+  "type": "module",
+  "bin": {
+    "xrechnung-validator-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "server.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepack": "npm run build",
+    "start": "node dist/index.js",
+    "test": "node --test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wenboteng/xrechnung-validator.git",
+    "directory": "mcp"
+  },
+  "homepage": "https://checkxrechnung.com",
+  "bugs": {
+    "url": "https://github.com/wenboteng/xrechnung-validator/issues"
+  },
+  "keywords": [
+    "xrechnung",
+    "zugferd",
+    "e-invoicing",
+    "en16931",
+    "validator",
+    "mcp",
+    "einvoice",
+    "germany"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.1",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^18.19.64",
+    "typescript": "5.9.3"
+  }
+}

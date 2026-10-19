@@ -1,0 +1,47 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Install the Python CLI
+        run: python -m pip install ./cli
+
+      - name: Lint Python
+        run: python -m compileall -q cli/src examples/python_requests.py tests
+
+      - name: Python tests
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
+
+      - name: Lint and test the Node CLI
+        run: |
+          node --check cli-node/bin/xrechnung-check.js
+          node --check cli-node/lib/api.js
+          node --check examples/node_fetch.mjs
+          node --test cli-node/test
+
+      - name: Lint and boot the MCP server
+        working-directory: mcp
+        run: |
+          npm ci
+          npx tsc --noEmit
+          npm run build
+          node --test test
+          node scripts/stdio-smoke.mjs

@@ -1,0 +1,41 @@
+{
+  "name": "xrechnung-check",
+  "version": "0.1.0",
+  "description": "CLI for the free XRechnung / ZUGFeRD (EN 16931) validator API at checkxrechnung.com",
+  "license": "MIT",
+  "author": "Bobook Limited",
+  "type": "module",
+  "bin": {
+    "xrechnung-check": "./bin/xrechnung-check.js"
+  },
+  "files": [
+    "bin",
+    "lib",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wenboteng/xrechnung-validator.git",
+    "directory": "cli-node"
+  },
+  "homepage": "https://checkxrechnung.com",
+  "bugs": {
+    "url": "https://github.com/wenboteng/xrechnung-validator/issues"
+  },
+  "keywords": [
+    "xrechnung",
+    "zugferd",
+    "e-invoicing",
+    "en16931",
+    "validator",
+    "einvoice",
+    "germany"
+  ]
+}
