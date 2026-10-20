@@ -22,10 +22,12 @@ await client.connect(transport);
 
 const listed = await client.listTools();
 const names = (listed.tools || []).map((tool) => tool.name);
-if (!names.includes("validate_xrechnung")) {
-  console.error("missing tool validate_xrechnung:", names.join(", "));
-  await client.close();
-  process.exit(1);
+for (const required of ["validate_xrechnung", "validate_zugferd", "extract_zugferd"]) {
+  if (!names.includes(required)) {
+    console.error("missing tool " + required + ":", names.join(", "));
+    await client.close();
+    process.exit(1);
+  }
 }
 console.log("tools:", names.join(", "));
 

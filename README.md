@@ -13,7 +13,7 @@ The file is uploaded to `POST https://checkxrechnung.com/v1/validate` for that r
 | API key | none |
 | Per IP per UTC day | 50 validations |
 | Per minute | 10 |
-| Max upload | 5 MB |
+| Max upload | 5 MB on `POST /v1/validate`. 10 MB on `POST /v1/zugferd/validate` and `POST /v1/zugferd/extract` |
 | Over the daily or minute limit | HTTP 429 and `Retry-After` |
 | Over 5 MB | HTTP 413 |
 
@@ -89,6 +89,10 @@ Downloaded from [checkxrechnung.com/samples](https://checkxrechnung.com/samples)
 | [`samples/valid-xrechnung-ubl.xml`](samples/valid-xrechnung-ubl.xml) | Valid XRechnung 3.0 UBL. Pass, no errors. |
 | [`samples/invalid-xrechnung-ubl.xml`](samples/invalid-xrechnung-ubl.xml) | Missing required data. Fail, 14 errors, including BR-08 and BR-DE-15. |
 | [`samples/plain-invoice.pdf`](samples/plain-invoice.pdf) | PDF with no embedded XML. Not an e-invoice. |
+| [`samples/factur-x-en16931.pdf`](samples/factur-x-en16931.pdf) | Synthetic Factur-X PDF, profile EN16931. `xrechnung-check zugferd` expects a pass. |
+| [`samples/factur-x-en16931-invalid.pdf`](samples/factur-x-en16931-invalid.pdf) | Same profile, seller address removed. Expect BR-08 and BR-09 with `rule_url`. |
+| [`samples/factur-x-minimum.pdf`](samples/factur-x-minimum.pdf) | Profile MINIMUM. EN 16931 CII rules can fail a correct subset. |
+| [`samples/zugferd-xrechnung.pdf`](samples/zugferd-xrechnung.pdf) | Profile XRECHNUNG, embedded `xrechnung.xml`. |
 
 ## CLI
 
@@ -98,13 +102,18 @@ Python 3.9+, package `xrechnung-check`. The only dependency is `requests`.
 pip install ./cli
 xrechnung-check samples/valid-xrechnung-ubl.xml
 xrechnung-check samples/invalid-xrechnung-ubl.xml --json
+xrechnung-check zugferd samples/factur-x-en16931.pdf
+xrechnung-check extract samples/factur-x-en16931.pdf --json
 ```
+
+`zugferd` posts the PDF to `POST /v1/zugferd/validate` (PDF/A-3 check, profile, EN 16931 CII Schematron, `rule_url`). `extract` posts it to `POST /v1/zugferd/extract` and prints the raw XML plus the JSON summary. Both share the free counter with `POST /v1/validate`. The PDF limit is 10 MB.
 
 Node 18+, package `xrechnung-check`, no dependencies:
 
 ```bash
 npx ./cli-node samples/valid-xrechnung-ubl.xml
 node cli-node/bin/xrechnung-check.js samples/invalid-xrechnung-ubl.xml --json
+node cli-node/bin/xrechnung-check.js zugferd samples/factur-x-en16931.pdf
 ```
 
 Human output prints each issue with its rule id and `rule_url`. `--json` prints the normalized report. Exit `0` when `valid` is true, `1` when the file fails or is not an e-invoice, `2` on usage, file, or HTTP errors (including 413 and 429).
@@ -113,7 +122,7 @@ After publish, the same commands are `pip install xrechnung-check` and `npx xrec
 
 ## MCP server
 
-[`mcp/`](mcp/) is a stdio MCP server, package `xrechnung-validator-mcp`. It exposes one tool, `validate_xrechnung`, with `file_path` or `xml`. The result is `valid` plus `errors[]` (`rule_id`, `severity`, `location`, `message`, `hint`, `rule_url`).
+[`mcp/`](mcp/) is a stdio MCP server, package `xrechnung-validator-mcp` 0.2.0. Tools: `validate_xrechnung` (`file_path` or `xml`), `validate_zugferd` (`file_path`), and `extract_zugferd` (`file_path`). Validation results are `valid` plus `errors[]` (`rule_id`, `severity`, `location`, `message`, `hint`, `rule_url`). Extract returns `ok`, `profile`, `summary`, and the raw `xml`.
 
 Registry metadata is in [`mcp/server.json`](mcp/server.json) (`io.github.wenboteng/xrechnung-validator`). Config snippets for Claude Desktop, Cursor, and VS Code are in [`mcp/README.md`](mcp/README.md). Not submitted to the MCP registry yet.
 
@@ -144,7 +153,15 @@ Kostenlose Client-Werkzeuge für die Prüfung von XRechnung (UBL und CII) und ZU
 
 Die Datei geht an `POST https://checkxrechnung.com/v1/validate` und wird für diese eine Anfrage geprüft. Die Antwort enthält `persisted: false`.
 
-Grenzen: 50 Prüfungen pro IP und UTC-Tag, höchstens 10 pro Minute, maximal 5 MB. Darüber HTTP 429 mit `Retry-After`, bei mehr als 5 MB HTTP 413. Batch und höheres Volumen über die [Warteliste](https://checkxrechnung.com/api-waitlist).
+Grenzen: 50 Prüfungen pro IP und UTC-Tag, höchstens 10 pro Minute, gemeinsamer Zähler. `POST /v1/validate` maximal 5 MB, die ZUGFeRD-Endpunkte maximal 10 MB. Darüber HTTP 429 mit `Retry-After`, bei zu großen Dateien HTTP 413. Batch und höheres Volumen über die [Warteliste](https://checkxrechnung.com/api-waitlist).
+
+ZUGFeRD / Factur-X:
+
+```bash
+curl -F "file=@samples/factur-x-en16931.pdf" https://checkxrechnung.com/v1/zugferd/validate
+xrechnung-check zugferd samples/factur-x-en16931.pdf
+xrechnung-check extract samples/factur-x-en16931.pdf
+```
 
 UBL:
 

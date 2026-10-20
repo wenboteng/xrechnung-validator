@@ -1,7 +1,7 @@
 {
   "name": "xrechnung-check",
-  "version": "0.1.0",
-  "description": "CLI for the free XRechnung / ZUGFeRD (EN 16931) validator API at checkxrechnung.com",
+  "version": "0.2.0",
+  "description": "CLI for the free XRechnung / ZUGFeRD / Factur-X validator API at checkxrechnung.com",
   "license": "MIT",
   "author": "Bobook Limited",
   "type": "module",

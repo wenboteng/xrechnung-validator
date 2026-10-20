@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "RechnungCheck API",
-    "version": "1.0.0",
-    "description": "Free single-file XRechnung / ZUGFeRD validation. 50 requests per IP per UTC day, 10 per minute. Batch and higher volume: https://checkxrechnung.com/api-waitlist",
+    "version": "1.1.0",
+    "description": "Free single-file XRechnung / ZUGFeRD validation. 50 requests per IP per UTC day, 10 per minute, shared by /v1/validate and the ZUGFeRD routes. PDFs on /v1/zugferd/* may be 10 MB. Batch and higher volume: https://checkxrechnung.com/api-waitlist. Each Schematron issue includes rule_url when a public page exists (https://checkxrechnung.com/fehler/ and https://checkxrechnung.com/en/errors/).",
     "contact": {
       "email": "info@bobook.club"
     }
@@ -115,6 +115,12 @@
                           "source": {
                             "type": "string",
                             "example": "kosit"
+                          },
+                          "rule_url": {
+                            "type": "string",
+                            "format": "uri",
+                            "description": "Public explanation page for this rule id, when the code is in the KoSIT Schematron catalog. Absent for schema and preflight codes that have no page.",
+                            "example": "https://checkxrechnung.com/fehler/br-08"
                           }
                         }
                       }
@@ -141,6 +147,181 @@
                 "schema": { "type": "integer" }
               }
             }
+          }
+        }
+      }
+    },
+    "/v1/zugferd/validate": {
+      "post": {
+        "summary": "Validate one ZUGFeRD or Factur-X PDF",
+        "description": "PDF/A-3 structure check, or veraPDF when that program is installed (pdfa.engine). Extracts factur-x.xml, zugferd-invoice.xml or xrechnung.xml. Profile: MINIMUM, BASIC WL, BASIC, EN16931, EXTENDED, XRECHNUNG. XML is checked with the EN 16931 CII Schematron. Profile XRECHNUNG also runs the XRechnung CII Schematron. Same free limit as /v1/validate. Max 10 MB.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "ZUGFeRD or Factur-X PDF, max 10 MB"
+                  }
+                },
+                "required": ["file"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Validation report. pdfa.label states whether the PDF/A check was veraPDF or the lighter structure check.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ZugferdReport" }
+              }
+            }
+          },
+          "413": { "description": "File larger than 10 MB" },
+          "429": { "description": "Shared free limit exceeded. Same counter as /v1/validate." }
+        }
+      }
+    },
+    "/v1/zugferd/extract": {
+      "post": {
+        "summary": "Extract the embedded Factur-X / ZUGFeRD XML and a JSON summary",
+        "description": "Returns the raw XML and a summary. Same free limit as /v1/validate. Max 10 MB. ok means an XML attachment was found.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "ZUGFeRD or Factur-X PDF, max 10 MB"
+                  }
+                },
+                "required": ["file"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Raw XML plus summary.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ZugferdExtract" }
+              }
+            }
+          },
+          "413": { "description": "File larger than 10 MB" },
+          "429": { "description": "Shared free limit exceeded. Same counter as /v1/validate." }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ZugferdReport": {
+        "type": "object",
+        "properties": {
+          "ok": { "type": "boolean" },
+          "persisted": { "type": "boolean", "const": false },
+          "fileName": { "type": "string" },
+          "bytes": { "type": "integer" },
+          "hasXml": { "type": "boolean" },
+          "embeddedName": { "type": "string", "example": "factur-x.xml" },
+          "syntax": { "type": "string" },
+          "invoiceType": { "type": "string" },
+          "profile": {
+            "type": "string",
+            "enum": ["MINIMUM", "BASIC WL", "BASIC", "EN16931", "EXTENDED", "XRECHNUNG", "UNKNOWN", ""]
+          },
+          "customization": { "type": "string" },
+          "profileNote": { "type": "string" },
+          "pdfa": { "$ref": "#/components/schemas/PdfaCheck" },
+          "schematron": {
+            "type": "array",
+            "items": { "type": "string", "example": "en16931-cii" }
+          },
+          "summary": {
+            "type": "object",
+            "properties": {
+              "errors": { "type": "integer" },
+              "warnings": { "type": "integer" }
+            }
+          },
+          "issues": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Issue" }
+          },
+          "versions": { "type": "object" }
+        }
+      },
+      "ZugferdExtract": {
+        "type": "object",
+        "properties": {
+          "ok": { "type": "boolean" },
+          "persisted": { "type": "boolean", "const": false },
+          "fileName": { "type": "string" },
+          "bytes": { "type": "integer" },
+          "embeddedName": { "type": "string" },
+          "profile": { "type": "string" },
+          "customization": { "type": "string" },
+          "syntax": { "type": "string" },
+          "invoiceType": { "type": "string" },
+          "pdfa": { "$ref": "#/components/schemas/PdfaCheck" },
+          "xml": { "type": ["string", "null"], "description": "Raw embedded XML when extraction succeeded." },
+          "summary": {
+            "type": "object",
+            "properties": {
+              "invoiceNumber": { "type": "string" },
+              "issueDate": { "type": "string" },
+              "sellerName": { "type": "string" },
+              "buyerName": { "type": "string" },
+              "currency": { "type": "string" },
+              "grandTotal": { "type": "string" },
+              "duePayable": { "type": "string" },
+              "profile": { "type": "string" }
+            }
+          },
+          "issues": { "type": "array", "items": { "$ref": "#/components/schemas/Issue" } },
+          "versions": { "type": "object" }
+        }
+      },
+      "PdfaCheck": {
+        "type": "object",
+        "properties": {
+          "engine": { "type": "string", "enum": ["structure", "verapdf"] },
+          "label": {
+            "type": "string",
+            "description": "Human-readable name of the check. The structure engine says it is not veraPDF."
+          },
+          "ok": { "type": "boolean" },
+          "part": { "type": "string", "example": "3" },
+          "conformance": { "type": "string", "example": "B" },
+          "afRelationship": { "type": "string", "example": "Alternative" },
+          "embeddedName": { "type": "string" },
+          "issues": { "type": "array", "items": { "$ref": "#/components/schemas/Issue" } }
+        }
+      },
+      "Issue": {
+        "type": "object",
+        "properties": {
+          "severity": { "type": "string" },
+          "code": { "type": "string", "example": "BR-08" },
+          "location": { "type": "string" },
+          "message": { "type": "string" },
+          "hint": { "type": "string" },
+          "source": { "type": "string" },
+          "rule_url": {
+            "type": "string",
+            "format": "uri",
+            "example": "https://checkxrechnung.com/fehler/br-08"
           }
         }
       }

@@ -1,7 +1,7 @@
 {
   "name": "xrechnung-validator-mcp",
-  "version": "0.1.0",
-  "description": "MCP server: validate one XRechnung or ZUGFeRD file with the free checkxrechnung.com API.",
+  "version": "0.2.0",
+  "description": "MCP server: validate XRechnung and ZUGFeRD / Factur-X files with the free checkxrechnung.com API.",
   "mcpName": "io.github.wenboteng/xrechnung-validator",
   "license": "MIT",
   "author": "Bobook Limited",

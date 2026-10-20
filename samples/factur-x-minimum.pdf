@@ -1,0 +1,186 @@
+%PDF-1.3
+%‚„œ”
+1 0 obj
+<<
+/Producer (pypdf)
+/Title (factur\055x\055minimum)
+/Creator (RechnungCheck sample generator)
+/Subject (Synthetic Factur\055X test file\056 Not a real invoice\056)
+>>
+endobj
+2 0 obj
+<<
+/Type /Pages
+/Count 1
+/Kids [ 4 0 R ]
+>>
+endobj
+3 0 obj
+<<
+/Type /Catalog
+/Pages 2 0 R
+/Names 6 0 R
+/AF [ 8 0 R ]
+/Metadata 9 0 R
+>>
+endobj
+4 0 obj
+<<
+/Type /Page
+/Resources <<
+>>
+/MediaBox [ 0.0 0.0 595 842 ]
+/Parent 2 0 R
+>>
+endobj
+5 0 obj
+<<
+/Type /EmbeddedFile
+/Subtype /text#232Fxml
+/Length 2566
+>>
+stream
+<?xml version="1.0" encoding="UTF-8"?>
+<rsm:CrossIndustryInvoice xmlns:rsm="urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100" xmlns:ram="urn:un:unece:uncefact:data:standard:ReusableAggregateBusinessInformationEntity:100" xmlns:udt="urn:un:unece:uncefact:data:standard:UnqualifiedDataType:100">
+  <rsm:ExchangedDocumentContext>
+    
+    <ram:GuidelineSpecifiedDocumentContextParameter>
+      <ram:ID>urn:factur-x.eu:1p0:minimum</ram:ID>
+    </ram:GuidelineSpecifiedDocumentContextParameter>
+  </rsm:ExchangedDocumentContext>
+  <rsm:ExchangedDocument>
+    <ram:ID>MIN-2026-001</ram:ID>
+    <ram:TypeCode>380</ram:TypeCode>
+    <ram:IssueDateTime>
+      <udt:DateTimeString format="102">20261020</udt:DateTimeString>
+    </ram:IssueDateTime>
+  </rsm:ExchangedDocument>
+  <rsm:SupplyChainTradeTransaction>
+    
+    <ram:ApplicableHeaderTradeAgreement>
+      
+      <ram:SellerTradeParty>
+        <ram:Name>Muster GmbH</ram:Name>
+        
+        
+        
+        <ram:SpecifiedTaxRegistration>
+          <ram:ID schemeID="VA">DE123456789</ram:ID>
+        </ram:SpecifiedTaxRegistration>
+      </ram:SellerTradeParty>
+      <ram:BuyerTradeParty>
+        <ram:Name>Beispiel AG</ram:Name>
+        <ram:PostalTradeAddress>
+          <ram:PostcodeCode>80331</ram:PostcodeCode>
+          <ram:LineOne>Kaufweg 2</ram:LineOne>
+          <ram:CityName>Muenchen</ram:CityName>
+          <ram:CountryID>DE</ram:CountryID>
+        </ram:PostalTradeAddress>
+        
+      </ram:BuyerTradeParty>
+    </ram:ApplicableHeaderTradeAgreement>
+    <ram:ApplicableHeaderTradeDelivery>
+      
+    </ram:ApplicableHeaderTradeDelivery>
+    <ram:ApplicableHeaderTradeSettlement>
+      <ram:InvoiceCurrencyCode>EUR</ram:InvoiceCurrencyCode>
+      
+      
+      <ram:SpecifiedTradePaymentTerms>
+        <ram:Description>Zahlbar innerhalb 30 Tagen ohne Abzug. Testdokument, keine echte Leistung.</ram:Description>
+        <ram:DueDateDateTime>
+          <udt:DateTimeString format="102">20261119</udt:DateTimeString>
+        </ram:DueDateDateTime>
+      </ram:SpecifiedTradePaymentTerms>
+      <ram:SpecifiedTradeSettlementHeaderMonetarySummation>
+        
+        <ram:TaxBasisTotalAmount>100.00</ram:TaxBasisTotalAmount>
+        <ram:TaxTotalAmount currencyID="EUR">19.00</ram:TaxTotalAmount>
+        <ram:GrandTotalAmount>119.00</ram:GrandTotalAmount>
+        <ram:DuePayableAmount>119.00</ram:DuePayableAmount>
+      </ram:SpecifiedTradeSettlementHeaderMonetarySummation>
+    </ram:ApplicableHeaderTradeSettlement>
+  </rsm:SupplyChainTradeTransaction>
+</rsm:CrossIndustryInvoice>
+
+endstream
+endobj
+6 0 obj
+<<
+/EmbeddedFiles 7 0 R
+>>
+endobj
+7 0 obj
+<<
+/Names [ (factur\055x\056xml) <<
+/Type /Filespec
+/F (factur\055x\056xml)
+/EF <<
+/F 5 0 R
+>>
+/AFRelationship /Alternative
+/UF (factur\055x\056xml)
+/Desc (Synthetic invoice XML for RechnungCheck tests)
+>> ]
+>>
+endobj
+8 0 obj
+<<
+/Type /Filespec
+/F (factur\055x\056xml)
+/EF <<
+/F 5 0 R
+>>
+/AFRelationship /Alternative
+/UF (factur\055x\056xml)
+/Desc (Synthetic invoice XML for RechnungCheck tests)
+>>
+endobj
+9 0 obj
+<<
+/Type /Metadata
+/Subtype /XML
+/Length 783
+>>
+stream
+<?xpacket begin="Ôªø" id="W5M0MpCehiHzreSzNTczkc9d"?>
+<x:xmpmeta xmlns:x="adobe:ns:meta/">
+ <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <rdf:Description rdf:about=""
+    xmlns:pdfaid="http://www.aiim.org/pdfa/ns/id/"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:fx="urn:factur-x:pdfa:CrossIndustryDocument:invoice:1p0#">
+   <pdfaid:part>3</pdfaid:part>
+   <pdfaid:conformance>B</pdfaid:conformance>
+   <dc:title><rdf:Alt><rdf:li xml:lang="de">factur-x-minimum</rdf:li></rdf:Alt></dc:title>
+   <fx:DocumentType>INVOICE</fx:DocumentType>
+   <fx:DocumentFileName>factur-x.xml</fx:DocumentFileName>
+   <fx:Version>1.0</fx:Version>
+   <fx:ConformanceLevel>MINIMUM</fx:ConformanceLevel>
+  </rdf:Description>
+ </rdf:RDF>
+</x:xmpmeta>
+<?xpacket end="w"?>
+endstream
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000015 00000 n 
+0000000198 00000 n 
+0000000257 00000 n 
+0000000349 00000 n 
+0000000443 00000 n 
+0000003104 00000 n 
+0000003146 00000 n 
+0000003372 00000 n 
+0000003560 00000 n 
+trailer
+<<
+/Size 10
+/Root 3 0 R
+/Info 1 0 R
+>>
+startxref
+4424
+%%EOF

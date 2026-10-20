@@ -7,10 +7,13 @@ from pathlib import Path
 from typing import Any
 
 API_URL = "https://checkxrechnung.com/v1/validate"
+ZUGFERD_VALIDATE_URL = "https://checkxrechnung.com/v1/zugferd/validate"
+ZUGFERD_EXTRACT_URL = "https://checkxrechnung.com/v1/zugferd/extract"
 RULE_BASE = "https://checkxrechnung.com/fehler/"
 WAITLIST_URL = "https://checkxrechnung.com/api-waitlist"
 MAX_BYTES = 5 * 1024 * 1024
-USER_AGENT = "xrechnung-check/0.1.0 (+https://checkxrechnung.com)"
+MAX_PDF_BYTES = 10 * 1024 * 1024
+USER_AGENT = "xrechnung-check/0.2.0 (+https://checkxrechnung.com)"
 TIMEOUT = (10, 120)
 
 
@@ -86,6 +89,19 @@ def normalize(report: dict[str, Any]) -> dict[str, Any]:
         result["syntax"] = report["syntax"]
     if isinstance(report.get("invoiceType"), str):
         result["invoiceType"] = report["invoiceType"]
+    for key in ("profile", "embeddedName", "customization", "profileNote"):
+        if isinstance(report.get(key), str) and report[key]:
+            result[key] = report[key]
+    pdfa = report.get("pdfa")
+    if isinstance(pdfa, dict):
+        clean_pdfa = {}
+        for key in ("engine", "label", "part", "conformance", "afRelationship", "embeddedName"):
+            if isinstance(pdfa.get(key), str) and pdfa[key]:
+                clean_pdfa[key] = pdfa[key]
+        if isinstance(pdfa.get("ok"), bool):
+            clean_pdfa["ok"] = pdfa["ok"]
+        if clean_pdfa:
+            result["pdfa"] = clean_pdfa
     if isinstance(report.get("persisted"), bool):
         result["persisted"] = report["persisted"]
     if summary is not None:
@@ -102,6 +118,11 @@ def normalize(report: dict[str, Any]) -> dict[str, Any]:
         "hasXml",
         "syntax",
         "invoiceType",
+        "profile",
+        "embeddedName",
+        "customization",
+        "profileNote",
+        "pdfa",
         "persisted",
         "summary",
         "versions",
@@ -118,6 +139,13 @@ def format_report(result: dict[str, Any]) -> str:
         lines.append(f"syntax: {result['syntax']}")
     if result.get("invoiceType"):
         lines.append(f"type: {result['invoiceType']}")
+    if result.get("profile"):
+        lines.append(f"profile: {result['profile']}")
+    if result.get("embeddedName"):
+        lines.append(f"embedded: {result['embeddedName']}")
+    pdfa = result.get("pdfa")
+    if isinstance(pdfa, dict) and pdfa.get("label"):
+        lines.append(f"pdfa: {pdfa['label']}")
     if isinstance(result.get("hasXml"), bool):
         lines.append("xml: yes" if result["hasXml"] else "xml: no")
     summary = result.get("summary") or {}
@@ -146,26 +174,42 @@ def dumps(result: dict[str, Any]) -> str:
 
 
 def validate_path(path: Path) -> dict[str, Any]:
+    return _read(path, MAX_BYTES, "5 MB", API_URL, normalize)
+
+
+def zugferd_path(path: Path) -> dict[str, Any]:
+    return _read(path, MAX_PDF_BYTES, "10 MB", ZUGFERD_VALIDATE_URL, normalize)
+
+
+def extract_path(path: Path) -> dict[str, Any]:
+    return _read(path, MAX_PDF_BYTES, "10 MB", ZUGFERD_EXTRACT_URL, normalize_extract)
+
+
+def validate_bytes(filename: str, data: bytes, content_type: str) -> dict[str, Any]:
+    return _post(API_URL, filename, data, content_type, MAX_BYTES, "5 MB", normalize)
+
+
+def _read(path: Path, limit: int, label: str, url: str, normalizer) -> dict[str, Any]:
     if not path.is_file():
         raise ClientError(f"file not found: {path}")
     size = path.stat().st_size
     if size == 0:
         raise ClientError(f"empty file: {path}")
-    if size > MAX_BYTES:
-        raise ClientError(f"file is larger than 5 MB, the API limit: {path}")
-    return validate_bytes(path.name, path.read_bytes(), content_type_for(path.name))
+    if size > limit:
+        raise ClientError(f"file is larger than {label}, the API limit: {path}")
+    return _post(url, path.name, path.read_bytes(), content_type_for(path.name), limit, label, normalizer)
 
 
-def validate_bytes(filename: str, data: bytes, content_type: str) -> dict[str, Any]:
+def _post(url: str, filename: str, data: bytes, content_type: str, limit: int, label: str, normalizer) -> dict[str, Any]:
     if not data:
         raise ClientError("empty file")
-    if len(data) > MAX_BYTES:
-        raise ClientError("file is larger than 5 MB, the API limit")
+    if len(data) > limit:
+        raise ClientError(f"file is larger than {label}, the API limit")
     import requests
 
     try:
         response = requests.post(
-            API_URL,
+            url,
             files={"file": (filename, data, content_type)},
             headers={"User-Agent": USER_AGENT, "Accept": "application/json"},
             timeout=TIMEOUT,
@@ -173,17 +217,60 @@ def validate_bytes(filename: str, data: bytes, content_type: str) -> dict[str, A
     except requests.RequestException as exc:
         raise ClientError(f"network error: {exc}") from exc
     if response.status_code != 200:
-        raise ClientError(_http_error(response))
+        raise ClientError(_http_error(response, label))
     try:
         payload = response.json()
     except ValueError as exc:
         raise ClientError("API returned a non-JSON response") from exc
     if not isinstance(payload, dict):
         raise ClientError("API returned an unexpected JSON response")
-    return normalize(payload)
+    return normalizer(payload)
 
 
-def _http_error(response: Any) -> str:
+def normalize_extract(report: dict[str, Any]) -> dict[str, Any]:
+    result: dict[str, Any] = {"ok": report.get("ok") is True}
+    for key in ("fileName", "embeddedName", "profile", "customization", "syntax", "invoiceType"):
+        if isinstance(report.get(key), str) and report[key]:
+            result[key] = report[key]
+    if isinstance(report.get("bytes"), int):
+        result["bytes"] = report["bytes"]
+    if isinstance(report.get("persisted"), bool):
+        result["persisted"] = report["persisted"]
+    summary = report.get("summary")
+    if isinstance(summary, dict):
+        clean_summary = {str(key): value for key, value in summary.items() if isinstance(value, str) and value}
+        if clean_summary:
+            result["summary"] = clean_summary
+    if isinstance(report.get("xml"), str):
+        result["xml"] = report["xml"]
+    pdfa = report.get("pdfa")
+    if isinstance(pdfa, dict) and isinstance(pdfa.get("engine"), str):
+        result["pdfa"] = {"engine": pdfa["engine"]}
+        if isinstance(pdfa.get("label"), str):
+            result["pdfa"]["label"] = pdfa["label"]
+    return result
+
+
+def format_extract(result: dict[str, Any]) -> str:
+    lines = ["extracted" if result.get("ok") else "not extracted"]
+    if result.get("fileName"):
+        lines[0] += f": {result['fileName']}"
+    if result.get("profile"):
+        lines.append(f"profile: {result['profile']}")
+    if result.get("embeddedName"):
+        lines.append(f"embedded: {result['embeddedName']}")
+    summary = result.get("summary") if isinstance(result.get("summary"), dict) else {}
+    for key in ("invoiceNumber", "issueDate", "sellerName", "buyerName", "currency", "grandTotal", "duePayable"):
+        if summary.get(key):
+            lines.append(f"{key}: {summary[key]}")
+    xml = result.get("xml")
+    if isinstance(xml, str) and xml:
+        lines.append("---")
+        lines.append(xml.rstrip("\n"))
+    return "\n".join(lines) + "\n"
+
+
+def _http_error(response: Any, limit_label: str = "5 MB") -> str:
     retry = response.headers.get("Retry-After")
     body = (response.text or "").strip().replace("\n", " ")
     if len(body) > 500:
@@ -195,6 +282,6 @@ def _http_error(response: Any) -> str:
             f"Free limit: 50 per IP per UTC day, 10 per minute. Waitlist: {WAITLIST_URL}. {body}"
         ).strip()
     if response.status_code == 413:
-        return f"file too large (HTTP 413). The API accepts at most 5 MB. {body}".strip()
+        return f"file too large (HTTP 413). The API accepts at most {limit_label}. {body}".strip()
     extra = f" Retry-After: {retry}s." if retry else ""
     return f"HTTP {response.status_code}.{extra} {body}".strip()

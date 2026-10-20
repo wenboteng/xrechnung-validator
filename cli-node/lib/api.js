@@ -2,10 +2,13 @@ import { readFile, stat } from "node:fs/promises";
 import { randomBytes } from "node:crypto";
 
 export const API_URL = "https://checkxrechnung.com/v1/validate";
+export const ZUGFERD_VALIDATE_URL = "https://checkxrechnung.com/v1/zugferd/validate";
+export const ZUGFERD_EXTRACT_URL = "https://checkxrechnung.com/v1/zugferd/extract";
 export const RULE_BASE = "https://checkxrechnung.com/fehler/";
 export const WAITLIST_URL = "https://checkxrechnung.com/api-waitlist";
 export const MAX_BYTES = 5 * 1024 * 1024;
-export const USER_AGENT = "xrechnung-check/0.1.0 (+https://checkxrechnung.com)";
+export const MAX_PDF_BYTES = 10 * 1024 * 1024;
+export const USER_AGENT = "xrechnung-check/0.2.0 (+https://checkxrechnung.com)";
 
 export class ClientError extends Error {
   constructor(message) {
@@ -63,6 +66,17 @@ export function normalize(report) {
   if (typeof report.hasXml === "boolean") result.hasXml = report.hasXml;
   if (typeof report.syntax === "string") result.syntax = report.syntax;
   if (typeof report.invoiceType === "string") result.invoiceType = report.invoiceType;
+  for (const key of ["profile", "embeddedName", "customization", "profileNote"]) {
+    if (typeof report[key] === "string" && report[key]) result[key] = report[key];
+  }
+  if (report.pdfa && typeof report.pdfa === "object") {
+    const pdfa = {};
+    for (const key of ["engine", "label", "part", "conformance", "afRelationship", "embeddedName"]) {
+      if (typeof report.pdfa[key] === "string" && report.pdfa[key]) pdfa[key] = report.pdfa[key];
+    }
+    if (typeof report.pdfa.ok === "boolean") pdfa.ok = report.pdfa.ok;
+    if (Object.keys(pdfa).length) result.pdfa = pdfa;
+  }
   if (typeof report.persisted === "boolean") result.persisted = report.persisted;
   if (report.summary && typeof report.summary === "object") {
     const summary = {};
@@ -86,6 +100,9 @@ export function formatReport(result) {
   lines.push(`${status}: ${result.fileName || ""}`.trimEnd());
   if (result.syntax) lines.push(`syntax: ${result.syntax}`);
   if (result.invoiceType) lines.push(`type: ${result.invoiceType}`);
+  if (result.profile) lines.push(`profile: ${result.profile}`);
+  if (result.embeddedName) lines.push(`embedded: ${result.embeddedName}`);
+  if (result.pdfa && result.pdfa.label) lines.push(`pdfa: ${result.pdfa.label}`);
   if (typeof result.hasXml === "boolean") lines.push(result.hasXml ? "xml: yes" : "xml: no");
   const summary = result.summary || {};
   if (summary.errors != null) lines.push(`errors: ${summary.errors}`);
@@ -123,6 +140,22 @@ function encodeMultipart(filename, bytes, contentType) {
 }
 
 export async function validatePath(filePath) {
+  return readAndPost(filePath, MAX_BYTES, "5 MB", API_URL, normalize);
+}
+
+export async function zugferdPath(filePath) {
+  return readAndPost(filePath, MAX_PDF_BYTES, "10 MB", ZUGFERD_VALIDATE_URL, normalize);
+}
+
+export async function extractPath(filePath) {
+  return readAndPost(filePath, MAX_PDF_BYTES, "10 MB", ZUGFERD_EXTRACT_URL, normalizeExtract);
+}
+
+export async function validateBytes(filename, bytes, contentType) {
+  return postBytes(API_URL, filename, bytes, contentType, MAX_BYTES, "5 MB", normalize);
+}
+
+async function readAndPost(filePath, limit, label, url, normalizer) {
   let info;
   try {
     info = await stat(filePath);
@@ -132,19 +165,19 @@ export async function validatePath(filePath) {
   }
   if (!info.isFile()) throw new ClientError(`file not found: ${filePath}`);
   if (info.size === 0) throw new ClientError(`empty file: ${filePath}`);
-  if (info.size > MAX_BYTES) throw new ClientError(`file is larger than 5 MB, the API limit: ${filePath}`);
+  if (info.size > limit) throw new ClientError(`file is larger than ${label}, the API limit: ${filePath}`);
   const bytes = await readFile(filePath);
   const name = filePath.split(/[\\/]/).pop() || "invoice.xml";
-  return validateBytes(name, bytes, contentTypeFor(name));
+  return postBytes(url, name, bytes, contentTypeFor(name), limit, label, normalizer);
 }
 
-export async function validateBytes(filename, bytes, contentType) {
+async function postBytes(url, filename, bytes, contentType, limit, label, normalizer) {
   if (!bytes || bytes.length === 0) throw new ClientError("empty file");
-  if (bytes.length > MAX_BYTES) throw new ClientError("file is larger than 5 MB, the API limit");
+  if (bytes.length > limit) throw new ClientError(`file is larger than ${label}, the API limit`);
   const form = encodeMultipart(filename, bytes, contentType);
   let response;
   try {
-    response = await fetch(API_URL, {
+    response = await fetch(url, {
       method: "POST",
       headers: {
         Accept: "application/json",
@@ -158,7 +191,7 @@ export async function validateBytes(filename, bytes, contentType) {
     throw new ClientError(`network error: ${err instanceof Error ? err.message : err}`);
   }
   const text = await response.text();
-  if (response.status !== 200) throw new ClientError(httpError(response, text));
+  if (response.status !== 200) throw new ClientError(httpError(response, text, label));
   let payload;
   try {
     payload = JSON.parse(text);
@@ -168,10 +201,48 @@ export async function validateBytes(filename, bytes, contentType) {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
     throw new ClientError("API returned an unexpected JSON response");
   }
-  return normalize(payload);
+  return normalizer(payload);
 }
 
-function httpError(response, text) {
+export function normalizeExtract(report) {
+  const result = { ok: report.ok === true };
+  for (const key of ["fileName", "embeddedName", "profile", "customization", "syntax", "invoiceType"]) {
+    if (typeof report[key] === "string" && report[key]) result[key] = report[key];
+  }
+  if (Number.isInteger(report.bytes)) result.bytes = report.bytes;
+  if (typeof report.persisted === "boolean") result.persisted = report.persisted;
+  if (report.summary && typeof report.summary === "object") {
+    const summary = {};
+    for (const [key, value] of Object.entries(report.summary)) {
+      if (typeof value === "string" && value) summary[key] = value;
+    }
+    if (Object.keys(summary).length) result.summary = summary;
+  }
+  if (typeof report.xml === "string") result.xml = report.xml;
+  if (report.pdfa && typeof report.pdfa === "object" && typeof report.pdfa.engine === "string") {
+    result.pdfa = { engine: report.pdfa.engine };
+    if (typeof report.pdfa.label === "string") result.pdfa.label = report.pdfa.label;
+  }
+  return result;
+}
+
+export function formatExtract(result) {
+  const lines = [result.ok ? "extracted" : "not extracted"];
+  if (result.fileName) lines[0] += `: ${result.fileName}`;
+  if (result.profile) lines.push(`profile: ${result.profile}`);
+  if (result.embeddedName) lines.push(`embedded: ${result.embeddedName}`);
+  const summary = result.summary || {};
+  for (const key of ["invoiceNumber", "issueDate", "sellerName", "buyerName", "currency", "grandTotal", "duePayable"]) {
+    if (summary[key]) lines.push(`${key}: ${summary[key]}`);
+  }
+  if (typeof result.xml === "string" && result.xml) {
+    lines.push("---");
+    lines.push(result.xml.replace(/\n$/, ""));
+  }
+  return lines.join("\n") + "\n";
+}
+
+function httpError(response, text, limitLabel = "5 MB") {
   const retry = response.headers.get("retry-after");
   let body = (text || "").trim().replace(/\s+/g, " ");
   if (body.length > 500) body = body.slice(0, 500) + "…";
@@ -180,7 +251,7 @@ function httpError(response, text) {
     return `rate limit reached (HTTP 429).${wait} Free limit: 50 per IP per UTC day, 10 per minute. Waitlist: ${WAITLIST_URL}. ${body}`.trim();
   }
   if (response.status === 413) {
-    return `file too large (HTTP 413). The API accepts at most 5 MB. ${body}`.trim();
+    return `file too large (HTTP 413). The API accepts at most ${limitLabel}. ${body}`.trim();
   }
   const extra = retry ? ` Retry-After: ${retry}s.` : "";
   return `HTTP ${response.status}.${extra} ${body}`.trim();

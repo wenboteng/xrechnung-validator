@@ -2,20 +2,20 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.wenboteng/xrechnung-validator",
   "title": "XRechnung Validator",
-  "description": "Validate one XRechnung or ZUGFeRD file with the free checkxrechnung.com API.",
+  "description": "Validate XRechnung XML and ZUGFeRD / Factur-X PDFs with the free checkxrechnung.com API.",
   "websiteUrl": "https://checkxrechnung.com",
   "repository": {
     "url": "https://github.com/wenboteng/xrechnung-validator",
     "source": "github",
     "subfolder": "mcp"
   },
-  "version": "0.1.0",
+  "version": "0.2.0",
   "packages": [
     {
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "xrechnung-validator-mcp",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "transport": {
         "type": "stdio"
       }

@@ -36,6 +36,11 @@ test("help and a missing file do not need the network", () => {
   const help = spawnSync(process.execPath, [bin, "--help"], { encoding: "utf8" });
   assert.equal(help.status, 0);
   assert.match(help.stdout, /checkxrechnung.com\/v1\/validate/);
+  assert.match(help.stdout, /zugferd/);
+
+  const zugferd = spawnSync(process.execPath, [bin, "extract", "no-such.pdf"], { encoding: "utf8" });
+  assert.equal(zugferd.status, 2);
+  assert.match(zugferd.stderr, /file not found/);
 
   const missing = spawnSync(process.execPath, [bin, "no-such-invoice.xml"], { encoding: "utf8" });
   assert.equal(missing.status, 2);

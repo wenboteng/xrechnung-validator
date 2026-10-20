@@ -6,6 +6,8 @@ Command-line client for the free, keyless XRechnung / ZUGFeRD validator API.
 pip install xrechnung-check
 xrechnung-check invoice.xml
 xrechnung-check invoice.xml --json
+xrechnung-check zugferd invoice.pdf
+xrechnung-check extract invoice.pdf
 ```
 
 Until the package is on PyPI, install it from a checkout:
@@ -16,7 +18,7 @@ pip install ./cli
 
 `FILE` is an XRechnung XML document (UBL or CII) or a ZUGFeRD PDF. The command posts it as multipart field `file` to `https://checkxrechnung.com/v1/validate`. Python 3.9+. The only dependency is `requests`.
 
-No API key. Free limit: 50 validations per IP per UTC day, 10 per minute, 5 MB maximum. HTTP 429 carries `Retry-After`. Higher volume: https://checkxrechnung.com/api-waitlist
+No API key. Free limit: 50 validations per IP per UTC day, 10 per minute, shared with the ZUGFeRD routes. `FILE` on the default command is at most 5 MB. `zugferd` and `extract` accept a PDF up to 10 MB and call `POST /v1/zugferd/validate` and `POST /v1/zugferd/extract`. HTTP 429 carries `Retry-After`. Higher volume: https://checkxrechnung.com/api-waitlist
 
 Human output lists each issue with its rule id and `rule_url`. If the API omits `rule_url`, the CLI uses `https://checkxrechnung.com/fehler/<code>` (lowercase). `--json` prints a normalized report: `valid`, `errors[]` with `rule_id` and `rule_url`, plus summary fields from the API.
 
