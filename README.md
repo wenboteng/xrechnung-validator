@@ -124,7 +124,7 @@ After publish, the same commands are `pip install xrechnung-check` and `npx xrec
 
 [`mcp/`](mcp/) is a stdio MCP server, package `xrechnung-validator-mcp` 0.2.0. Tools: `validate_xrechnung` (`file_path` or `xml`), `validate_zugferd` (`file_path`), and `extract_zugferd` (`file_path`). Validation results are `valid` plus `errors[]` (`rule_id`, `severity`, `location`, `message`, `hint`, `rule_url`). Extract returns `ok`, `profile`, `summary`, and the raw `xml`.
 
-Registry metadata is in [`mcp/server.json`](mcp/server.json) (`io.github.wenboteng/xrechnung-validator`). Config snippets for Claude Desktop, Cursor, and VS Code are in [`mcp/README.md`](mcp/README.md). Not submitted to the MCP registry yet.
+Registry metadata is in [`mcp/server.json`](mcp/server.json) (`io.github.wenboteng/xrechnung-validator`). Config snippets for Claude Desktop, Cursor, and VS Code are in [`mcp/README.md`](mcp/README.md). Listed in the official MCP registry as `io.github.wenboteng/xrechnung-validator` (v0.2.0).
 
 ## Examples
 
@@ -198,7 +198,7 @@ cd mcp && npm ci && npm run build && node --test test && node scripts/stdio-smok
 
 ## Publishing
 
-Nothing in this repo is on npm, PyPI, or the MCP registry yet. Names checked while preparing this tree: `xrechnung-check` (PyPI and npm) and `xrechnung-validator-mcp` (npm) were unused. Do not publish from CI.
+Published as version 0.2.0 (ZUGFeRD/Factur-X included): `xrechnung-check` on npm and PyPI, `xrechnung-validator-mcp` on npm, and `io.github.wenboteng/xrechnung-validator` in the MCP registry. Do not publish from CI.
 
 PyPI, from a machine logged in via `~/.pypirc` or an API token:
 
