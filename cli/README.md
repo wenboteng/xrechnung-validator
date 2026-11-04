@@ -20,7 +20,24 @@ pip install ./cli
 
 No API key. Free limit: 50 validations per IP per UTC day, 10 per minute, shared with the ZUGFeRD routes. `FILE` on the default command is at most 5 MB. `zugferd` and `extract` accept a PDF up to 10 MB and call `POST /v1/zugferd/validate` and `POST /v1/zugferd/extract`. HTTP 429 carries `Retry-After`. Higher volume: https://checkxrechnung.com/api-waitlist
 
-Human output lists each issue with its rule id and `rule_url`. If the API omits `rule_url`, the CLI uses `https://checkxrechnung.com/fehler/<code>` (lowercase). `--json` prints a normalized report: `valid`, `errors[]` with `rule_id` and `rule_url`, plus summary fields from the API.
+Human output lists each failing rule code, the rule message, a one-line English hint when one is known, and `rule_url`. If the API omits `rule_url`, the CLI uses `https://checkxrechnung.com/fehler/<code>` (lowercase). `--json` prints a normalized report: `valid`, `errors[]` with `rule_id`, `message`, `hint`, and `rule_url`, plus summary fields from the API.
+
+## What each error means
+
+The codes below are the ones that show up most often. The linked page is the longer fix.
+
+| Code | What to fix | Rule page |
+| --- | --- | --- |
+| `BR-DE-15` | Buyer reference (BT-10) is missing. For the German public sector this is often the Leitweg-ID. | https://checkxrechnung.com/fehler/br-de-15 |
+| `BR-DE-1` | Payment instructions are missing. Add a payment means, usually an IBAN. | https://checkxrechnung.com/fehler/br-de-1 |
+| `BR-08` | Seller postal address is missing (city, postcode, country). | https://checkxrechnung.com/fehler/br-08 |
+| `BR-CO-10` | Invoice net amount does not match the sum of the lines. | https://checkxrechnung.com/fehler/br-co-10 |
+| `BR-CO-15` | Gross amount must equal net plus VAT. | https://checkxrechnung.com/fehler/br-co-15 |
+| `BR-S-08` | A standard-rated line needs the seller VAT ID. | https://checkxrechnung.com/fehler/br-s-08 |
+| `XML-SCHEMA` | Element order, type, or a required node does not match UBL or CII. | https://checkxrechnung.com/fehler/ |
+| `ZUGFERD-NO-XML` | The PDF has no embedded invoice XML. | https://checkxrechnung.com/zugferd |
+
+The full list of rule pages starts at https://checkxrechnung.com/fehler/ . English index: https://checkxrechnung.com/en/errors/ .
 
 | Exit | Meaning |
 | --- | --- |

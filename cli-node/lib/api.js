@@ -8,7 +8,7 @@ export const RULE_BASE = "https://checkxrechnung.com/fehler/";
 export const WAITLIST_URL = "https://checkxrechnung.com/api-waitlist";
 export const MAX_BYTES = 5 * 1024 * 1024;
 export const MAX_PDF_BYTES = 10 * 1024 * 1024;
-export const USER_AGENT = "xrechnung-check/0.2.0 (+https://checkxrechnung.com)";
+export const USER_AGENT = "xrechnung-check/0.2.1 (+https://checkxrechnung.com)";
 
 export class ClientError extends Error {
   constructor(message) {
@@ -35,6 +35,26 @@ export function ruleUrl(issue) {
   return RULE_BASE + code.trim().toLowerCase();
 }
 
+export const HINTS = {
+  "BR-DE-15": "Buyer reference (BT-10) is missing. On invoices to German public authorities this is often the Leitweg-ID.",
+  "BR-DE-1": "Payment instructions are missing. XRechnung requires a payment means, usually an IBAN.",
+  "BR-DE-2": "Seller contact is missing: name, phone, and email.",
+  "BR-08": "Seller address is missing. Add street, city, postal code, and country.",
+  "BR-CO-10": "The invoice net amount does not match the sum of the lines plus allowances and charges.",
+  "BR-CO-15": "Gross amount must equal net amount plus VAT.",
+  "BR-S-08": "A standard-rated line needs the seller VAT ID or a tax registration number.",
+  "XML-SCHEMA": "The XML does not match the UBL or CII schema: element order, data type, or a required element.",
+  "WELLFORMED": "The file is not well-formed XML.",
+  "ZUGFERD-NO-XML": "This PDF has no embedded invoice XML. Ask for an XRechnung XML file or a ZUGFeRD / Factur-X PDF.",
+  "PDF-REQUIRED": "This endpoint expects a PDF. Check XML invoices with POST /v1/validate.",
+};
+
+export function hintFor(code, apiHint) {
+  if (typeof code === "string" && HINTS[code]) return HINTS[code];
+  if (typeof apiHint === "string" && apiHint.trim()) return apiHint.trim();
+  return undefined;
+}
+
 function clean(data) {
   const out = {};
   for (const [key, value] of Object.entries(data)) {
@@ -55,7 +75,7 @@ export function normalize(report) {
         severity: typeof issue.severity === "string" ? issue.severity : undefined,
         location: typeof issue.location === "string" ? issue.location : undefined,
         message: typeof issue.message === "string" ? issue.message : undefined,
-        hint: typeof issue.hint === "string" ? issue.hint : undefined,
+        hint: hintFor(typeof code === "string" ? code : "", issue.hint),
         rule_url: ruleUrl(issue),
       }),
     );

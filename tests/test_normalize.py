@@ -32,6 +32,8 @@ class NormalizeTests(unittest.TestCase):
         text = format_report(result)
         self.assertIn("BR-DE-15 error /Invoice", text)
         self.assertIn("rule_url: https://checkxrechnung.com/fehler/br-de-15", text)
+        self.assertIn("Buyer reference", result["errors"][0]["hint"])
+        self.assertIn("hint: Buyer reference", text)
 
     def test_keeps_api_rule_url(self):
         result = normalize(

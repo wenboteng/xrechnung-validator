@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "xrechnung-check"
-version = "0.2.0"
+version = "0.2.1"
 description = "CLI for the free XRechnung / ZUGFeRD / Factur-X validator API at checkxrechnung.com"
 readme = "README.md"
 requires-python = ">=3.9"

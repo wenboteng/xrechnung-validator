@@ -13,7 +13,7 @@ RULE_BASE = "https://checkxrechnung.com/fehler/"
 WAITLIST_URL = "https://checkxrechnung.com/api-waitlist"
 MAX_BYTES = 5 * 1024 * 1024
 MAX_PDF_BYTES = 10 * 1024 * 1024
-USER_AGENT = "xrechnung-check/0.2.0 (+https://checkxrechnung.com)"
+USER_AGENT = "xrechnung-check/0.2.1 (+https://checkxrechnung.com)"
 TIMEOUT = (10, 120)
 
 
@@ -41,6 +41,29 @@ def rule_url(issue: dict[str, Any]) -> str | None:
     return RULE_BASE + code.strip().lower()
 
 
+HINTS = {
+    "BR-DE-15": "Buyer reference (BT-10) is missing. On invoices to German public authorities this is often the Leitweg-ID.",
+    "BR-DE-1": "Payment instructions are missing. XRechnung requires a payment means, usually an IBAN.",
+    "BR-DE-2": "Seller contact is missing: name, phone, and email.",
+    "BR-08": "Seller address is missing. Add street, city, postal code, and country.",
+    "BR-CO-10": "The invoice net amount does not match the sum of the lines plus allowances and charges.",
+    "BR-CO-15": "Gross amount must equal net amount plus VAT.",
+    "BR-S-08": "A standard-rated line needs the seller VAT ID or a tax registration number.",
+    "XML-SCHEMA": "The XML does not match the UBL or CII schema: element order, data type, or a required element.",
+    "WELLFORMED": "The file is not well-formed XML.",
+    "ZUGFERD-NO-XML": "This PDF has no embedded invoice XML. Ask for an XRechnung XML file or a ZUGFeRD / Factur-X PDF.",
+    "PDF-REQUIRED": "This endpoint expects a PDF. Check XML invoices with POST /v1/validate.",
+}
+
+
+def hint_for(code: Any, api_hint: Any) -> str | None:
+    if isinstance(code, str) and code in HINTS:
+        return HINTS[code]
+    if isinstance(api_hint, str) and api_hint.strip():
+        return api_hint.strip()
+    return None
+
+
 def _clean(data: dict[str, Any]) -> dict[str, Any]:
     return {key: value for key, value in data.items() if value is not None and value != ""}
 
@@ -65,7 +88,7 @@ def normalize(report: dict[str, Any]) -> dict[str, Any]:
                         "severity": issue.get("severity") if isinstance(issue.get("severity"), str) else None,
                         "location": issue.get("location") if isinstance(issue.get("location"), str) else None,
                         "message": issue.get("message") if isinstance(issue.get("message"), str) else None,
-                        "hint": issue.get("hint") if isinstance(issue.get("hint"), str) else None,
+                        "hint": hint_for(code, issue.get("hint")),
                         "rule_url": rule_url(issue),
                     }
                 )

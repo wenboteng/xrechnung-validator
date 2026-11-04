@@ -21,6 +21,8 @@ test("derives a rule page when the API omits rule_url", () => {
   assert.equal(result.errors[0].rule_id, "BR-DE-15");
   assert.equal(result.errors[0].rule_url, "https://checkxrechnung.com/fehler/br-de-15");
   assert.match(formatReport(result), /rule_url: https:\/\/checkxrechnung.com\/fehler\/br-de-15/);
+  assert.match(result.errors[0].hint, /Buyer reference/);
+  assert.match(formatReport(result), /hint: Buyer reference/);
 });
 
 test("keeps rule_url when the API sends it", () => {
