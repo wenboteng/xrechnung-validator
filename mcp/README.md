@@ -14,7 +14,7 @@ Validation output is `valid` plus `errors[]`. Each error has `rule_id`, `severit
 
 The service reports `persisted: false`. The tools call the network, so they are not a local read-only check. Batch volume: https://checkxrechnung.com/api-waitlist
 
-Package name: `xrechnung-validator-mcp`. Registry name in [`server.json`](server.json): `io.github.wenboteng/xrechnung-validator` (`mcpName` matches). Not submitted to the MCP registry yet. Build with `npm run build` (`node dist/index.js`) or, after publish, `npx -y xrechnung-validator-mcp`.
+Package name: `xrechnung-validator-mcp`. Registry name in [`server.json`](server.json): `io.github.wenboteng/xrechnung-validator` (`mcpName` matches). It is listed in the MCP registry as `io.github.wenboteng/xrechnung-validator`. Install with `npx -y xrechnung-validator-mcp`. A local build is `npm run build`, then `node dist/index.js`.
 
 ## Claude Desktop
 

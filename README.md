@@ -118,7 +118,7 @@ node cli-node/bin/xrechnung-check.js zugferd samples/factur-x-en16931.pdf
 
 Human output prints each issue with its rule id and `rule_url`. `--json` prints the normalized report. Exit `0` when `valid` is true, `1` when the file fails or is not an e-invoice, `2` on usage, file, or HTTP errors (including 413 and 429).
 
-After publish, the same commands are `pip install xrechnung-check` and `npx xrechnung-check file.xml`. They are not on PyPI or npm yet. See [Publishing](#publishing).
+Published install: `pip install xrechnung-check` and `npx xrechnung-check file.xml`. The MCP server is `npx -y xrechnung-validator-mcp`, registry name `io.github.wenboteng/xrechnung-validator`. See [llms-install.md](llms-install.md).
 
 ## MCP server
 
@@ -177,7 +177,7 @@ curl -F "file=@invoice-cii.xml" https://checkxrechnung.com/v1/validate
 
 Die Beispieldateien unter [`samples/`](samples/) stammen von [checkxrechnung.com/samples](https://checkxrechnung.com/samples): gültige XRechnung-UBL, ungültige XRechnung-UBL (14 Fehler, unter anderem BR-08 und BR-DE-15) und ein PDF ohne XML.
 
-CLI: `xrechnung-check datei.xml` (Python) oder `npx xrechnung-check datei.xml` (Node, nach Veröffentlichung). Exit-Code 0 bei gültig, 1 bei ungültig, 2 bei Aufruf- oder HTTP-Fehler. `--json` gibt den normalisierten Bericht aus, inklusive Regel-ID und `rule_url`.
+CLI: `pip install xrechnung-check`, dann `xrechnung-check datei.xml`, oder `npx xrechnung-check datei.xml`. Exit-Code 0 bei gültig, 1 bei ungültig, 2 bei Aufruf- oder HTTP-Fehler. `--json` gibt den normalisierten Bericht aus, inklusive Regel-ID und `rule_url`. Der MCP-Server ist `npx -y xrechnung-validator-mcp` (Registry `io.github.wenboteng/xrechnung-validator`).
 
 Links: [API-Doku](https://checkxrechnung.com/docs), [englische Doku](https://checkxrechnung.com/en/docs), [OpenAPI](https://checkxrechnung.com/openapi.json), [Fehler-Codes](https://checkxrechnung.com/fehler/), [Warteliste](https://checkxrechnung.com/api-waitlist).
 
