@@ -41,7 +41,7 @@ export function rateLimitMessage(text: string, retry: string | null, ref = "mcp"
 }
 export const MAX_BYTES = 5 * 1024 * 1024;
 export const MAX_PDF_BYTES = 10 * 1024 * 1024;
-const USER_AGENT = "xrechnung-validator-mcp/0.2.0 (+https://checkxrechnung.com)";
+const USER_AGENT = "xrechnung-validator-mcp/0.2.1 (+https://checkxrechnung.com)";
 
 export class ApiError extends Error {
   constructor(message: string) {

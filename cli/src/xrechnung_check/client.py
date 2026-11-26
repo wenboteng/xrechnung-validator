@@ -44,7 +44,7 @@ def rate_limit_message(text: str, retry: str | None, ref: str = "cli-python") ->
     )
 MAX_BYTES = 5 * 1024 * 1024
 MAX_PDF_BYTES = 10 * 1024 * 1024
-USER_AGENT = "xrechnung-check/0.2.0 (+https://checkxrechnung.com)"
+USER_AGENT = "xrechnung-check/0.2.1 (+https://checkxrechnung.com)"
 TIMEOUT = (10, 120)
 
 

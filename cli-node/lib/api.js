@@ -40,7 +40,7 @@ export function rateLimitMessage(text, retry, ref = "cli") {
 }
 export const MAX_BYTES = 5 * 1024 * 1024;
 export const MAX_PDF_BYTES = 10 * 1024 * 1024;
-export const USER_AGENT = "xrechnung-check/0.2.0 (+https://checkxrechnung.com)";
+export const USER_AGENT = "xrechnung-check/0.2.1 (+https://checkxrechnung.com)";
 
 export class ClientError extends Error {
   constructor(message) {
