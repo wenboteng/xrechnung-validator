@@ -6,9 +6,41 @@ export const ZUGFERD_VALIDATE_URL = "https://checkxrechnung.com/v1/zugferd/valid
 export const ZUGFERD_EXTRACT_URL = "https://checkxrechnung.com/v1/zugferd/extract";
 export const RULE_BASE = "https://checkxrechnung.com/fehler/";
 export const WAITLIST_URL = "https://checkxrechnung.com/api-waitlist";
+
+// Shown when the free limit is hit (HTTP 429). utm_* and ref let the site count clicks.
+export const API_PRO_URL = "https://checkxrechnung.com/en/docs?utm_source=cli&utm_medium=429&utm_campaign=api_pro#pricing";
+
+function withRef(url, ref) {
+  try {
+    const u = new URL(url);
+    u.searchParams.set("ref", ref);
+    return u.toString();
+  } catch {
+    return url;
+  }
+}
+
+/** Text for a 429: the server message plus a link to buy an API Pro key. */
+export function rateLimitMessage(text, retry, ref = "cli") {
+  const wait = retry ? ` Retry-After: ${retry}s.` : "";
+  let data = null;
+  try {
+    data = JSON.parse(text || "");
+  } catch {
+    data = null;
+  }
+  const message = data && typeof data.message === "string" ? data.message.trim() : "";
+  const serverUrl =
+    data && typeof data.upgrade_url === "string" && data.upgrade_url.startsWith("https://") ? data.upgrade_url : "";
+  const upgrade = serverUrl ? withRef(serverUrl, ref) : API_PRO_URL;
+  if (serverUrl && message.includes(serverUrl)) {
+    return `rate limit reached (HTTP 429).${wait} ${message.replace(serverUrl, upgrade)}`;
+  }
+  return `rate limit reached (HTTP 429).${wait} ${message || "Free limit: 50 per IP per UTC day, 10 per minute."}\nGet an API Pro key (EUR 19/month, 5,000 checks per month): ${upgrade}`;
+}
 export const MAX_BYTES = 5 * 1024 * 1024;
 export const MAX_PDF_BYTES = 10 * 1024 * 1024;
-export const USER_AGENT = "xrechnung-check/0.2.0 (+https://checkxrechnung.com)";
+export const USER_AGENT = "xrechnung-check/0.2.1 (+https://checkxrechnung.com)";
 
 export class ClientError extends Error {
   constructor(message) {
@@ -247,8 +279,7 @@ function httpError(response, text, limitLabel = "5 MB") {
   let body = (text || "").trim().replace(/\s+/g, " ");
   if (body.length > 500) body = body.slice(0, 500) + "…";
   if (response.status === 429) {
-    const wait = retry ? ` Retry-After: ${retry}s.` : "";
-    return `rate limit reached (HTTP 429).${wait} Free limit: 50 per IP per UTC day, 10 per minute. Waitlist: ${WAITLIST_URL}. ${body}`.trim();
+    return rateLimitMessage(text, retry, "cli");
   }
   if (response.status === 413) {
     return `file too large (HTTP 413). The API accepts at most ${limitLabel}. ${body}`.trim();
