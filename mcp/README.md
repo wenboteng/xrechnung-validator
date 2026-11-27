@@ -16,6 +16,10 @@ The service reports `persisted: false`. The tools call the network, so they are 
 
 Package name: `xrechnung-validator-mcp`. Registry name in [`server.json`](server.json): `io.github.wenboteng/xrechnung-validator` (`mcpName` matches). It is listed in the MCP registry as `io.github.wenboteng/xrechnung-validator`. Install with `npx -y xrechnung-validator-mcp`. A local build is `npm run build`, then `node dist/index.js`.
 
+## Hosted MCP server (no install)
+
+`https://checkxrechnung.com/mcp` is a remote MCP server (Streamable HTTP) with the same tools: `validate_xrechnung` (`xml` or `file_base64`), `validate_zugferd` and `extract_zugferd` (`file_base64` of the PDF). Files are sent inline, nothing is stored. Without a key the free limit is 50 checks per IP per UTC day; send a [free API key](https://checkxrechnung.com/en/docs#free-key) as `X-API-Key` or `Authorization: Bearer` for 500 a month. Claude Code: `claude mcp add --transport http xrechnung https://checkxrechnung.com/mcp`. Generic config: `{"mcpServers": {"xrechnung": {"type": "http", "url": "https://checkxrechnung.com/mcp"}}}`.
+
 ## Claude Desktop
 
 `claude_desktop_config.json` (macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`, Windows: `%APPDATA%\Claude\claude_desktop_config.json`):

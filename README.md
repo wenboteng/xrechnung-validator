@@ -126,6 +126,10 @@ Published install: `pip install xrechnung-check` and `npx xrechnung-check file.x
 
 Registry metadata is in [`mcp/server.json`](mcp/server.json) (`io.github.wenboteng/xrechnung-validator`). Config snippets for Claude Desktop, Cursor, and VS Code are in [`mcp/README.md`](mcp/README.md). Listed in the official MCP registry as `io.github.wenboteng/xrechnung-validator` (v0.2.1).
 
+### Hosted MCP server (no install)
+
+`https://checkxrechnung.com/mcp` is a remote MCP server (Streamable HTTP) with the same tools: `validate_xrechnung` (`xml` or `file_base64`), `validate_zugferd` and `extract_zugferd` (`file_base64` of the PDF). Files are sent inline, nothing is stored. Without a key the free limit is 50 checks per IP per UTC day; send a [free API key](https://checkxrechnung.com/en/docs#free-key) as `X-API-Key` or `Authorization: Bearer` for 500 a month. Claude Code: `claude mcp add --transport http xrechnung https://checkxrechnung.com/mcp`. Generic config: `{"mcpServers": {"xrechnung": {"type": "http", "url": "https://checkxrechnung.com/mcp"}}}`.
+
 ## Examples
 
 Short snippets that post the `file` field. Each run spends one free validation.

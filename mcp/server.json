@@ -9,7 +9,21 @@
     "source": "github",
     "subfolder": "mcp"
   },
-  "version": "0.2.1",
+  "version": "0.3.0",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://checkxrechnung.com/mcp",
+      "headers": [
+        {
+          "name": "X-API-Key",
+          "description": "Optional free API key (500 checks a month) from https://checkxrechnung.com/en/docs#free-key. Without it: 50 checks per IP per UTC day.",
+          "isRequired": false,
+          "isSecret": true
+        }
+      ]
+    }
+  ],
   "packages": [
     {
       "registryType": "npm",
