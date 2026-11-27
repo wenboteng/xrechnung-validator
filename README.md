@@ -17,7 +17,7 @@ The file is uploaded to `POST https://checkxrechnung.com/v1/validate` for that r
 | Over the daily or minute limit | HTTP 429 and `Retry-After` |
 | Over 5 MB | HTTP 413 |
 
-Batch and higher volume: [API waitlist](https://checkxrechnung.com/api-waitlist) (joining is free). Docs: [English](https://checkxrechnung.com/en/docs), [Deutsch](https://checkxrechnung.com/docs). Machine-readable contract: [openapi.json](https://checkxrechnung.com/openapi.json) (copy in [`openapi/openapi.json`](openapi/openapi.json)).
+More volume: a [free API key](https://checkxrechnung.com/en/docs#free-key) gives 500 checks per calendar month with no daily cap (60 per minute, from any IP, for example in CI). Send it as the `X-API-Key` header: `curl -H "X-API-Key: xr_free_..." -F "file=@invoice.xml" https://checkxrechnung.com/v1/validate`. [API Pro](https://checkxrechnung.com/en/docs#pricing) (EUR 19/month, 5,000 checks) upgrades that same key, so your code does not change. The CLI and MCP server below call the keyless API. Docs: [English](https://checkxrechnung.com/en/docs), [Deutsch](https://checkxrechnung.com/docs). Machine-readable contract: [openapi.json](https://checkxrechnung.com/openapi.json) (copy in [`openapi/openapi.json`](openapi/openapi.json)).
 
 A file can pass here and still be rejected by a portal such as ZRE or OZG-RE. This is not a Peppol access point and not legal or tax advice.
 
@@ -122,9 +122,9 @@ Published install: `pip install xrechnung-check` and `npx xrechnung-check file.x
 
 ## MCP server
 
-[`mcp/`](mcp/) is a stdio MCP server, package `xrechnung-validator-mcp` 0.2.0. Tools: `validate_xrechnung` (`file_path` or `xml`), `validate_zugferd` (`file_path`), and `extract_zugferd` (`file_path`). Validation results are `valid` plus `errors[]` (`rule_id`, `severity`, `location`, `message`, `hint`, `rule_url`). Extract returns `ok`, `profile`, `summary`, and the raw `xml`.
+[`mcp/`](mcp/) is a stdio MCP server, package `xrechnung-validator-mcp` 0.2.1. Tools: `validate_xrechnung` (`file_path` or `xml`), `validate_zugferd` (`file_path`), and `extract_zugferd` (`file_path`). Validation results are `valid` plus `errors[]` (`rule_id`, `severity`, `location`, `message`, `hint`, `rule_url`). Extract returns `ok`, `profile`, `summary`, and the raw `xml`.
 
-Registry metadata is in [`mcp/server.json`](mcp/server.json) (`io.github.wenboteng/xrechnung-validator`). Config snippets for Claude Desktop, Cursor, and VS Code are in [`mcp/README.md`](mcp/README.md). Listed in the official MCP registry as `io.github.wenboteng/xrechnung-validator` (v0.2.0).
+Registry metadata is in [`mcp/server.json`](mcp/server.json) (`io.github.wenboteng/xrechnung-validator`). Config snippets for Claude Desktop, Cursor, and VS Code are in [`mcp/README.md`](mcp/README.md). Listed in the official MCP registry as `io.github.wenboteng/xrechnung-validator` (v0.2.1).
 
 ## Examples
 
@@ -144,16 +144,16 @@ Short snippets that post the `file` field. Each run spends one free validation.
 - Docs: [https://checkxrechnung.com/en/docs](https://checkxrechnung.com/en/docs) and [https://checkxrechnung.com/docs](https://checkxrechnung.com/docs)
 - OpenAPI: [https://checkxrechnung.com/openapi.json](https://checkxrechnung.com/openapi.json)
 - Rule and error pages: [https://checkxrechnung.com/fehler/](https://checkxrechnung.com/fehler/)
-- API waitlist: [https://checkxrechnung.com/api-waitlist](https://checkxrechnung.com/api-waitlist)
+- Free API key: [https://checkxrechnung.com/en/docs#free-key](https://checkxrechnung.com/en/docs#free-key)
 - Samples on the site: [https://checkxrechnung.com/samples](https://checkxrechnung.com/samples)
 
 ## Deutsch
 
-Kostenlose Client-Werkzeuge für die Prüfung von XRechnung (UBL und CII) und ZUGFeRD auf [checkxrechnung.com](https://checkxrechnung.com). Kein API-Schlüssel. Dieses Repository enthält nur Clients, Beispiele und die öffentliche OpenAPI-Datei, nicht die Validator-Engine.
+Kostenlose Client-Werkzeuge für die Prüfung von XRechnung (UBL und CII) und ZUGFeRD auf [checkxrechnung.com](https://checkxrechnung.com). Kein API-Schlüssel nötig. Dieses Repository enthält nur Clients, Beispiele und die öffentliche OpenAPI-Datei, nicht die Validator-Engine.
 
 Die Datei geht an `POST https://checkxrechnung.com/v1/validate` und wird für diese eine Anfrage geprüft. Die Antwort enthält `persisted: false`.
 
-Grenzen: 50 Prüfungen pro IP und UTC-Tag, höchstens 10 pro Minute, gemeinsamer Zähler. `POST /v1/validate` maximal 5 MB, die ZUGFeRD-Endpunkte maximal 10 MB. Darüber HTTP 429 mit `Retry-After`, bei zu großen Dateien HTTP 413. Batch und höheres Volumen über die [Warteliste](https://checkxrechnung.com/api-waitlist).
+Grenzen: 50 Prüfungen pro IP und UTC-Tag, höchstens 10 pro Minute, gemeinsamer Zähler. `POST /v1/validate` maximal 5 MB, die ZUGFeRD-Endpunkte maximal 10 MB. Darüber HTTP 429 mit `Retry-After`, bei zu großen Dateien HTTP 413. Mehr Volumen: Ein [kostenloser API-Key](https://checkxrechnung.com/docs#free-key) gibt 500 Prüfungen pro Kalendermonat ohne Tageslimit (60 pro Minute, von jeder IP, z. B. in CI), im Header `X-API-Key`. API Pro (19 €/Monat, 5.000 Prüfungen) upgradet denselben Key, am Code ändert sich nichts.
 
 ZUGFeRD / Factur-X:
 
@@ -179,7 +179,7 @@ Die Beispieldateien unter [`samples/`](samples/) stammen von [checkxrechnung.com
 
 CLI: `pip install xrechnung-check`, dann `xrechnung-check datei.xml`, oder `npx xrechnung-check datei.xml`. Exit-Code 0 bei gültig, 1 bei ungültig, 2 bei Aufruf- oder HTTP-Fehler. `--json` gibt den normalisierten Bericht aus, inklusive Regel-ID und `rule_url`. Der MCP-Server ist `npx -y xrechnung-validator-mcp` (Registry `io.github.wenboteng/xrechnung-validator`).
 
-Links: [API-Doku](https://checkxrechnung.com/docs), [englische Doku](https://checkxrechnung.com/en/docs), [OpenAPI](https://checkxrechnung.com/openapi.json), [Fehler-Codes](https://checkxrechnung.com/fehler/), [Warteliste](https://checkxrechnung.com/api-waitlist).
+Links: [API-Doku](https://checkxrechnung.com/docs), [englische Doku](https://checkxrechnung.com/en/docs), [OpenAPI](https://checkxrechnung.com/openapi.json), [Fehler-Codes](https://checkxrechnung.com/fehler/), [Kostenloser API-Key](https://checkxrechnung.com/docs#free-key).
 
 Ein bestandener Check kann bei ZRE, OZG-RE oder einem anderen Portal trotzdem scheitern. Kein Peppol-Zugang und keine Rechts- oder Steuerberatung.
 
@@ -198,7 +198,7 @@ cd mcp && npm ci && npm run build && node --test test && node scripts/stdio-smok
 
 ## Publishing
 
-Published as version 0.2.0 (ZUGFeRD/Factur-X included): `xrechnung-check` on npm and PyPI, `xrechnung-validator-mcp` on npm, and `io.github.wenboteng/xrechnung-validator` in the MCP registry. Do not publish from CI.
+Published as version 0.2.1 (ZUGFeRD/Factur-X since 0.2.0): `xrechnung-check` on npm and PyPI, `xrechnung-validator-mcp` on npm, and `io.github.wenboteng/xrechnung-validator` in the MCP registry. Do not publish from CI.
 
 PyPI, from a machine logged in via `~/.pypirc` or an API token:
 

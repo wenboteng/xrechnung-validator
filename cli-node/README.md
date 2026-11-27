@@ -16,7 +16,7 @@ npx ./cli-node invoice.xml
 
 `FILE` is an XRechnung XML document (UBL or CII) or a ZUGFeRD PDF. The command posts it as multipart field `file` to `https://checkxrechnung.com/v1/validate`.
 
-No API key. Free limit: 50 validations per IP per UTC day, 10 per minute, 5 MB maximum. HTTP 429 carries `Retry-After`. Higher volume: https://checkxrechnung.com/api-waitlist
+No API key. Free limit: 50 validations per IP per UTC day, 10 per minute, 5 MB maximum. HTTP 429 carries `Retry-After`. More volume: a free API key (500 checks per calendar month, no daily cap) for the HTTP API (`X-API-Key` header): https://checkxrechnung.com/en/docs#free-key
 
 Human output lists each issue with its rule id and `rule_url`. If the API omits `rule_url`, the CLI uses `https://checkxrechnung.com/fehler/<code>` (lowercase). `--json` prints a normalized report: `valid` and `errors[]` with `rule_id` and `rule_url`.
 

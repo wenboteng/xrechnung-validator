@@ -18,7 +18,7 @@ pip install ./cli
 
 `FILE` is an XRechnung XML document (UBL or CII) or a ZUGFeRD PDF. The command posts it as multipart field `file` to `https://checkxrechnung.com/v1/validate`. Python 3.9+. The only dependency is `requests`.
 
-No API key. Free limit: 50 validations per IP per UTC day, 10 per minute, shared with the ZUGFeRD routes. `FILE` on the default command is at most 5 MB. `zugferd` and `extract` accept a PDF up to 10 MB and call `POST /v1/zugferd/validate` and `POST /v1/zugferd/extract`. HTTP 429 carries `Retry-After`. Higher volume: https://checkxrechnung.com/api-waitlist
+No API key. Free limit: 50 validations per IP per UTC day, 10 per minute, shared with the ZUGFeRD routes. `FILE` on the default command is at most 5 MB. `zugferd` and `extract` accept a PDF up to 10 MB and call `POST /v1/zugferd/validate` and `POST /v1/zugferd/extract`. HTTP 429 carries `Retry-After`. More volume: a free API key (500 checks per calendar month, no daily cap) for the HTTP API (`X-API-Key` header): https://checkxrechnung.com/en/docs#free-key
 
 Human output lists each issue with its rule id and `rule_url`. If the API omits `rule_url`, the CLI uses `https://checkxrechnung.com/fehler/<code>` (lowercase). `--json` prints a normalized report: `valid`, `errors[]` with `rule_id` and `rule_url`, plus summary fields from the API.
 
